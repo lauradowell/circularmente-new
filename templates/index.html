@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circularmente.AI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.1.3/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"> <!-- Importar Roboto -->
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #e9f7ef; /* Fondo verde claro */
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .circularmente {
+            color: #41d363; /* Verde */
+        }
+        .ai {
+            color: #00bfff; /* Azul */
+        }
+        #chatbox {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 100%;
+            max-width: 600px; /* Máximo ancho del chatbox */
+            margin-bottom: 20px;
+        }
+        #messages {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        #messages:hover {
+            background-color: #f1f1f1; /* Cambio de color al pasar el ratón */
+        }
+        .user-message {
+            color: #28a745; /* Verde brillante */
+            text-align: right;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .chatbot-message {
+            color: #007bff; /* Azul */
+            text-align: left;
+            margin: 5px 0;
+            font-weight: 400;
+        }
+        .input-container {
+            display: flex;
+            width: 100%;
+            max-width: 600px; /* Máximo ancho del contenedor de entrada */
+        }
+        input {
+            flex: 1;
+            padding: 12px;
+            margin-right: 5px;
+            border: 2px solid #28a745; /* Borde verde */
+            border-radius: 5px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #0056b3; /* Azul al enfocar */
+        }
+        button {
+            padding: 12px;
+            border: none;
+            background-color: #28a745; /* Verde */
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #218838; /* Verde más oscuro al pasar el ratón */
+        }
+        #loadingMessage {
+            color: #28a745;
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center; /* Centrar el mensaje de carga */
+        }
+    </style>
+</head>
+<body>
+    <h1><span class="circularmente">Circularmente</span><span class="ai">.A.I.</span></h1>
+    <img src="https://images.vexels.com/media/users/3/298393/isolated/preview/e27fffb6876723d92c921b52517c1b6b-reciclar-el-personaje-de-dibujos-animados-del-planeta-tierra.png" alt="Logo de reciclaje" style="width: 100px; height: auto; margin-bottom: 20px;">
+    <div id="chatbox">
+        <div id="messages"></div>
+        <div id="loadingMessage" style="display: none;">Buscando soluciones ecológicas...</div>
+    </div>
+    <div class="input-container">
+        <input type="text" id="input" placeholder="Escribe el producto o material que deseas reciclar...">
+        <button onclick="enviarMensaje()">Enviar</button>
+    </div>
+
+    <script>
+        async function enviarMensaje() {
+            const input = document.getElementById('input');
+            const producto = input.value;
+            input.value = '';
+
+            if (producto.trim() === '') {
+                alert('Por favor, escribe un producto o material.');
+                return;
+            }
+
+            agregarMensaje(`Tú: ${producto}`, 'user-message');
+
+            // Mostrar el mensaje de carga
+            const loadingMessage = document.getElementById('loadingMessage');
+            loadingMessage.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/recomendar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ producto })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error en la solicitud');
+                }
+
+                const data = await response.json();
+                agregarMensaje(`Chatbot: ${data.recomendaciones}`, 'chatbot-message');
+            } catch (error) {
+                agregarMensaje('Error al obtener respuesta del chatbot.');
+                console.error(error);
+            } finally {
+                // Ocultar el mensaje de carga
+                loadingMessage.style.display = 'none';
+            }
+        }
+
+        function agregarMensaje(text, clase) {
+            const messages = document.getElementById('messages');
+            const message = document.createElement('p');
+            message.className = clase; // Agregar la clase para el estilo
+            message.innerHTML = marked(text); // Usar marked para formatear el texto
+            messages.appendChild(message);
+            messages.scrollTop = messages.scrollHeight;
+        }
+    </script>
+</body>
+</html>
